@@ -12,6 +12,7 @@ import { UploadCloud, Copy, Trash2, Loader2, FileImage, Wand2 } from "lucide-rea
 import { cn } from '@/lib/utils';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
+import { Slider } from '@/components/ui/slider';
 
 type TargetMarket = GenerateProductDescriptionFromImageInput['targetMarket'];
 
@@ -22,6 +23,7 @@ export function ProductDescriptionGenerator() {
   const [isDragging, setIsDragging] = useState<boolean>(false);
   const [customPrompt, setCustomPrompt] = useState('');
   const [targetMarket, setTargetMarket] = useState<TargetMarket>('General');
+  const [descriptionLength, setDescriptionLength] = useState(50);
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const currentFile = useRef<File | null>(null);
@@ -70,7 +72,8 @@ export function ProductDescriptionGenerator() {
           const result = await generateProductDescriptionFromImage({ 
             productImage: base64data,
             prompt: customPrompt,
-            targetMarket: targetMarket
+            targetMarket: targetMarket,
+            descriptionLength: descriptionLength,
           });
           setDescription(result.productDescription);
         } catch (error) {
@@ -96,7 +99,7 @@ export function ProductDescriptionGenerator() {
       });
        setIsLoading(false);
     }
-  }, [customPrompt, targetMarket, toast]);
+  }, [customPrompt, targetMarket, descriptionLength, toast]);
 
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     handleFile(e.target.files?.[0] || null);
@@ -134,6 +137,7 @@ export function ProductDescriptionGenerator() {
     setDescription('');
     setCustomPrompt('');
     setTargetMarket('General');
+    setDescriptionLength(50);
     currentFile.current = null;
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
@@ -226,6 +230,21 @@ export function ProductDescriptionGenerator() {
                   </div>
                 </RadioGroup>
               </div>
+              <div>
+                  <div className="flex justify-between items-center">
+                    <Label htmlFor="description-length">Panjang Deskripsi</Label>
+                    <span className="text-sm font-medium text-muted-foreground">{descriptionLength}%</span>
+                  </div>
+                  <Slider
+                    id="description-length"
+                    min={1}
+                    max={100}
+                    step={1}
+                    value={[descriptionLength]}
+                    onValueChange={(value) => setDescriptionLength(value[0])}
+                    className="mt-2"
+                  />
+              </div>
             </div>
             
             <Button onClick={handleGenerate} disabled={isLoading || !imagePreview} className="mb-4 w-full" size="lg">
@@ -269,7 +288,7 @@ export function ProductDescriptionGenerator() {
                    <FileImage className="w-12 h-12 text-muted-foreground mb-4"/>
                    <h4 className="font-semibold text-lg">Deskripsi Anda Muncul di Sini</h4>
                    <p className="text-muted-foreground mt-1 max-w-xs">
-                    Unggah gambar, isi prompt jika perlu, lalu klik tombol 'Generate Deskripsi'.
+                    Unggah gambar, atur opsi, lalu klik tombol 'Generate Deskripsi'.
                    </p>
                 </div>
               )}
