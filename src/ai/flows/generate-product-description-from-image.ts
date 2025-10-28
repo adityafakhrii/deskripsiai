@@ -17,6 +17,8 @@ const GenerateProductDescriptionFromImageInputSchema = z.object({
     .describe(
       "A photo of the product, as a data URI that must include a MIME type and use Base64 encoding. Expected format: 'data:<mimetype>;base64,<encoded_data>'."
     ),
+  prompt: z.string().optional().describe('A custom prompt to guide the description generation.'),
+  targetMarket: z.enum(['General', 'Anak Muda', 'Keluarga']).default('General').describe('The target market for the product description.'),
 });
 export type GenerateProductDescriptionFromImageInput = z.infer<typeof GenerateProductDescriptionFromImageInputSchema>;
 
@@ -33,7 +35,17 @@ const prompt = ai.definePrompt({
   name: 'generateProductDescriptionFromImagePrompt',
   input: {schema: GenerateProductDescriptionFromImageInputSchema},
   output: {schema: GenerateProductDescriptionFromImageOutputSchema},
-  prompt: `Anda adalah seorang pemasar ahli dengan pengalaman bertahun-tahun dalam membuat deskripsi produk yang menarik dan efektif. Buatlah deskripsi produk dalam bahasa Indonesia berdasarkan gambar produk yang diberikan. Deskripsi harus ringkas, menarik, dan informatif, menyoroti fitur dan manfaat utama produk.
+  prompt: `Anda adalah seorang pemasar ahli dengan pengalaman bertahun-tahun dalam membuat deskripsi produk yang menarik dan efektif. Buatlah deskripsi produk dalam bahasa Indonesia berdasarkan gambar produk yang diberikan.
+
+Gaya bahasa harus disesuaikan dengan target pasar:
+- **General**: Bahasa yang formal, informatif, dan menarik untuk audiens umum.
+- **Anak Muda**: Bahasa yang santai, kekinian, dan menggunakan istilah yang relevan dengan tren anak muda.
+- **Keluarga**: Bahasa yang hangat, ramah, dan menonjolkan manfaat produk untuk keluarga.
+
+Gunakan instruksi tambahan dari pengguna jika ada.
+
+**Target Pasar**: {{{targetMarket}}}
+**Instruksi Tambahan**: {{{prompt}}}
 
 Gambar Produk: {{media url=productImage}}
 

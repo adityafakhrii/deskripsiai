@@ -2,7 +2,7 @@
 
 import { useState, useCallback, ChangeEvent, DragEvent, useRef } from 'react';
 import NextImage from 'next/image';
-import { generateProductDescriptionFromImage } from '@/ai/flows/generate-product-description-from-image';
+import { generateProductDescriptionFromImage, GenerateProductDescriptionFromImageInput } from '@/ai/flows/generate-product-description-from-image';
 import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -10,14 +10,21 @@ import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { UploadCloud, Copy, Trash2, Loader2, FileImage } from "lucide-react";
 import { cn } from '@/lib/utils';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
+
+type TargetMarket = GenerateProductDescriptionFromImageInput['targetMarket'];
 
 export function ProductDescriptionGenerator() {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [description, setDescription] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isDragging, setIsDragging] = useState<boolean>(false);
+  const [customPrompt, setCustomPrompt] = useState('');
+  const [targetMarket, setTargetMarket] = useState<TargetMarket>('General');
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const currentFile = useRef<File | null>(null);
 
   const handleFile = useCallback((file: File | null) => {
     if (!file) return;
@@ -30,6 +37,8 @@ export function ProductDescriptionGenerator() {
       });
       return;
     }
+    
+    currentFile.current = file;
 
     const reader = new FileReader();
     reader.onload = (e) => {
@@ -37,10 +46,10 @@ export function ProductDescriptionGenerator() {
     };
     reader.readAsDataURL(file);
 
-    generateDescription(file);
-  }, [toast]);
+    generateDescription(file, customPrompt, targetMarket);
+  }, [toast, customPrompt, targetMarket]);
 
-  const generateDescription = useCallback(async (file: File) => {
+  const generateDescription = useCallback(async (file: File, prompt: string, market: TargetMarket) => {
     setIsLoading(true);
     setDescription('');
     try {
@@ -49,7 +58,11 @@ export function ProductDescriptionGenerator() {
       reader.onloadend = async () => {
         try {
           const base64data = reader.result as string;
-          const result = await generateProductDescriptionFromImage({ productImage: base64data });
+          const result = await generateProductDescriptionFromImage({ 
+            productImage: base64data,
+            prompt: prompt,
+            targetMarket: market
+          });
           setDescription(result.productDescription);
         } catch (error) {
            console.error(error);
@@ -73,6 +86,12 @@ export function ProductDescriptionGenerator() {
     }
   }, [toast]);
   
+  const handleRegenerate = () => {
+    if (currentFile.current) {
+      generateDescription(currentFile.current, customPrompt, targetMarket);
+    }
+  };
+
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     handleFile(e.target.files?.[0] || null);
   };
@@ -107,15 +126,18 @@ export function ProductDescriptionGenerator() {
   const handleClear = () => {
     setImagePreview(null);
     setDescription('');
+    setCustomPrompt('');
+    setTargetMarket('General');
+    currentFile.current = null;
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
     }
   };
 
   return (
-    <Card className="w-full max-w-5xl mx-auto overflow-hidden shadow-2xl shadow-primary/10">
+    <Card className="w-full max-w-6xl mx-auto overflow-hidden shadow-2xl shadow-primary/10">
       <CardContent className="p-0">
-        <div className="grid md:grid-cols-2 min-h-[550px]">
+        <div className="grid md:grid-cols-2 min-h-[650px]">
           <div 
             className={cn(
               "flex flex-col items-center justify-center border-b md:border-b-0 md:border-r transition-colors duration-300",
@@ -165,6 +187,54 @@ export function ProductDescriptionGenerator() {
                 </Button>
               )}
             </div>
+            
+            <div className="space-y-4 mb-4">
+              <div>
+                <Label htmlFor="custom-prompt">Prompt Tambahan (Opsional)</Label>
+                <Textarea 
+                  id="custom-prompt"
+                  placeholder="Contoh: Fokus pada bahan ramah lingkungan, sebutkan garansi 1 tahun."
+                  value={customPrompt}
+                  onChange={(e) => setCustomPrompt(e.target.value)}
+                  className="mt-1"
+                />
+              </div>
+              <div>
+                <Label>Gaya Bahasa</Label>
+                <RadioGroup
+                  value={targetMarket}
+                  onValueChange={(value: string) => setTargetMarket(value as TargetMarket)}
+                  className="mt-2 flex space-x-4"
+                >
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="General" id="general" />
+                    <Label htmlFor="general">General</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="Anak Muda" id="anak-muda" />
+                    <Label htmlFor="anak-muda">Anak Muda</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="Keluarga" id="keluarga" />
+                    <Label htmlFor="keluarga">Keluarga</Label>
+                  </div>
+                </RadioGroup>
+              </div>
+            </div>
+
+            {imagePreview && (
+              <Button onClick={handleRegenerate} disabled={isLoading} className="mb-4">
+                {isLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Memproses...
+                  </>
+                ) : (
+                  'Generate Ulang Deskripsi'
+                )}
+              </Button>
+            )}
+
             <div className="flex-1 flex flex-col">
               {isLoading ? (
                 <div className="flex-1 flex flex-col items-center justify-center text-center">
@@ -179,7 +249,7 @@ export function ProductDescriptionGenerator() {
                     onChange={(e) => setDescription(e.target.value)}
                     className="flex-1 text-base resize-none"
                     placeholder="Deskripsi produk..."
-                    rows={12}
+                    rows={10}
                   />
                   <Button onClick={handleCopy} className="mt-4 w-full" size="lg">
                     <Copy className="mr-2 h-5 w-5" />
@@ -191,7 +261,7 @@ export function ProductDescriptionGenerator() {
                    <FileImage className="w-12 h-12 text-muted-foreground mb-4"/>
                    <h4 className="font-semibold text-lg">Deskripsi Anda Muncul di Sini</h4>
                    <p className="text-muted-foreground mt-1 max-w-xs">
-                    Unggah gambar untuk memulai pembuatan deskripsi produk otomatis oleh AI.
+                    Unggah gambar dan pilih opsi untuk memulai pembuatan deskripsi produk otomatis oleh AI.
                    </p>
                 </div>
               )}
