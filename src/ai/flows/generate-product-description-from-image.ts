@@ -42,9 +42,9 @@ Buatlah deskripsi produk yang sangat rapi dan terstruktur dalam bahasa Indonesia
 
 **Aturan Format (PENTING):**
 - Gunakan paragraf yang jelas untuk memisahkan ide.
-- Jika ada daftar fitur atau spesifikasi, gunakan poin-poin (bullet points) dengan tanda bintang (*) atau strip (-).
+- **JANGAN GUNAKAN** poin-poin (bullet points) dengan tanda bintang (*) atau strip (-). Cukup tulis dalam bentuk paragraf deskriptif.
 - Pastikan penggunaan tanda baca (koma, titik, titik dua) yang benar.
-- Hasil akhir harus bersih, profesional, dan enak dibaca. Jangan ada format yang berantakan.
+- Hasil akhir harus bersih, profesional, dan enak dibaca. Jangan ada format yang berantakan atau tanda-tanda yang tidak perlu.
 
 **Gaya Bahasa (Sesuaikan dengan Target Pasar):**
 - **General**: Bahasa yang formal, informatif, dan menarik untuk audiens umum.
