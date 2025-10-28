@@ -35,21 +35,28 @@ const prompt = ai.definePrompt({
   name: 'generateProductDescriptionFromImagePrompt',
   input: {schema: GenerateProductDescriptionFromImageInputSchema},
   output: {schema: GenerateProductDescriptionFromImageOutputSchema},
-  prompt: `Anda adalah seorang pemasar ahli dengan pengalaman bertahun-tahun dalam membuat deskripsi produk yang menarik dan efektif. Buatlah deskripsi produk dalam bahasa Indonesia berdasarkan gambar produk yang diberikan.
+  prompt: `Anda adalah seorang copywriter ahli dengan pengalaman bertahun-tahun dalam membuat deskripsi produk yang menarik, efektif, dan mudah dibaca.
 
-Gaya bahasa harus disesuaikan dengan target pasar:
+**Tugas Anda:**
+Buatlah deskripsi produk yang sangat rapi dan terstruktur dalam bahasa Indonesia berdasarkan gambar dan informasi yang diberikan.
+
+**Aturan Format (PENTING):**
+- Gunakan paragraf yang jelas untuk memisahkan ide.
+- Jika ada daftar fitur atau spesifikasi, gunakan poin-poin (bullet points) dengan tanda bintang (*) atau strip (-).
+- Pastikan penggunaan tanda baca (koma, titik, titik dua) yang benar.
+- Hasil akhir harus bersih, profesional, dan enak dibaca. Jangan ada format yang berantakan.
+
+**Gaya Bahasa (Sesuaikan dengan Target Pasar):**
 - **General**: Bahasa yang formal, informatif, dan menarik untuk audiens umum.
 - **Anak Muda**: Bahasa yang santai, kekinian, dan menggunakan istilah yang relevan dengan tren anak muda.
 - **Keluarga**: Bahasa yang hangat, ramah, dan menonjolkan manfaat produk untuk keluarga.
 
-Gunakan instruksi tambahan dari pengguna jika ada.
+**Informasi Produk:**
+- **Target Pasar**: {{{targetMarket}}}
+- **Instruksi Tambahan dari Pengguna**: {{{prompt}}}
+- **Gambar Produk**: {{media url=productImage}}
 
-**Target Pasar**: {{{targetMarket}}}
-**Instruksi Tambahan**: {{{prompt}}}
-
-Gambar Produk: {{media url=productImage}}
-
-Deskripsi Produk:`, // Use Indonesian language.
+Buat deskripsi produk sekarang.`,
 });
 
 const generateProductDescriptionFromImageFlow = ai.defineFlow(

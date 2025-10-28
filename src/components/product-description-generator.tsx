@@ -8,7 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
-import { UploadCloud, Copy, Trash2, Loader2, FileImage } from "lucide-react";
+import { UploadCloud, Copy, Trash2, Loader2, FileImage, Wand2 } from "lucide-react";
 import { cn } from '@/lib/utils';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
@@ -39,6 +39,7 @@ export function ProductDescriptionGenerator() {
     }
     
     currentFile.current = file;
+    setDescription(''); // Clear previous description
 
     const reader = new FileReader();
     reader.onload = (e) => {
@@ -46,22 +47,30 @@ export function ProductDescriptionGenerator() {
     };
     reader.readAsDataURL(file);
 
-    generateDescription(file, customPrompt, targetMarket);
-  }, [toast, customPrompt, targetMarket]);
+  }, [toast]);
 
-  const generateDescription = useCallback(async (file: File, prompt: string, market: TargetMarket) => {
+  const handleGenerate = useCallback(async () => {
+    if (!currentFile.current) {
+        toast({
+            variant: "destructive",
+            title: "Gambar belum diunggah",
+            description: "Harap unggah gambar produk terlebih dahulu.",
+        });
+        return;
+    }
     setIsLoading(true);
     setDescription('');
+
     try {
       const reader = new FileReader();
-      reader.readAsDataURL(file);
+      reader.readAsDataURL(currentFile.current);
       reader.onloadend = async () => {
         try {
           const base64data = reader.result as string;
           const result = await generateProductDescriptionFromImage({ 
             productImage: base64data,
-            prompt: prompt,
-            targetMarket: market
+            prompt: customPrompt,
+            targetMarket: targetMarket
           });
           setDescription(result.productDescription);
         } catch (error) {
@@ -75,22 +84,19 @@ export function ProductDescriptionGenerator() {
           setIsLoading(false);
         }
       };
+      reader.onerror = () => {
+         throw new Error("Gagal membaca file");
+      }
     } catch (error) {
        console.error(error);
        toast({
         variant: "destructive",
-        title: "Gagal membaca file",
+        title: "Gagal memproses file",
         description: "Tidak dapat memproses file yang diunggah. Silakan coba lagi.",
       });
        setIsLoading(false);
     }
-  }, [toast]);
-  
-  const handleRegenerate = () => {
-    if (currentFile.current) {
-      generateDescription(currentFile.current, customPrompt, targetMarket);
-    }
-  };
+  }, [customPrompt, targetMarket, toast]);
 
   const handleFileChange = (e: ChangeEvent<HTMLInputElement>) => {
     handleFile(e.target.files?.[0] || null);
@@ -188,7 +194,7 @@ export function ProductDescriptionGenerator() {
               )}
             </div>
             
-            <div className="space-y-4 mb-4">
+            <div className="space-y-4 mb-6">
               <div>
                 <Label htmlFor="custom-prompt">Prompt Tambahan (Opsional)</Label>
                 <Textarea 
@@ -221,19 +227,21 @@ export function ProductDescriptionGenerator() {
                 </RadioGroup>
               </div>
             </div>
+            
+            <Button onClick={handleGenerate} disabled={isLoading || !imagePreview} className="mb-4 w-full" size="lg">
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Memproses...
+                </>
+              ) : (
+                <>
+                  <Wand2 className="mr-2 h-5 w-5" />
+                  Generate Deskripsi
+                </>
+              )}
+            </Button>
 
-            {imagePreview && (
-              <Button onClick={handleRegenerate} disabled={isLoading} className="mb-4">
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Memproses...
-                  </>
-                ) : (
-                  'Generate Ulang Deskripsi'
-                )}
-              </Button>
-            )}
 
             <div className="flex-1 flex flex-col">
               {isLoading ? (
@@ -247,11 +255,11 @@ export function ProductDescriptionGenerator() {
                   <Textarea
                     value={description}
                     onChange={(e) => setDescription(e.target.value)}
-                    className="flex-1 text-base resize-none"
+                    className="flex-1 text-base resize-none whitespace-pre-wrap"
                     placeholder="Deskripsi produk..."
                     rows={10}
                   />
-                  <Button onClick={handleCopy} className="mt-4 w-full" size="lg">
+                  <Button onClick={handleCopy} className="mt-4 w-full">
                     <Copy className="mr-2 h-5 w-5" />
                     Salin Deskripsi
                   </Button>
@@ -261,7 +269,7 @@ export function ProductDescriptionGenerator() {
                    <FileImage className="w-12 h-12 text-muted-foreground mb-4"/>
                    <h4 className="font-semibold text-lg">Deskripsi Anda Muncul di Sini</h4>
                    <p className="text-muted-foreground mt-1 max-w-xs">
-                    Unggah gambar dan pilih opsi untuk memulai pembuatan deskripsi produk otomatis oleh AI.
+                    Unggah gambar, isi prompt jika perlu, lalu klik tombol 'Generate Deskripsi'.
                    </p>
                 </div>
               )}
