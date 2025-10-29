@@ -31,5 +31,4 @@ Untuk menjalankan proyek ini secara lokal:
     npm run dev
     ```
 
-Buka [http://localhost:9002](http://localhost:9002) di browser Anda untuk melihat hasilnya.
-# deskripsiai
+Buka [http://localhost:9002](http://localhost:9002) di browser untuk melihat hasilnya.
